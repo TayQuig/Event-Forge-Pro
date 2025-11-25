@@ -34,6 +34,18 @@ const App: React.FC = () => {
         let loadedEvents = await LocalDB.getAllEvents();
         let loadedSettings = await LocalDB.getSettings();
         let loadedAssets = await LocalDB.getAllAssets();
+
+        // AUTO-CLEANUP: Remove legacy mock events if they exist in the DB
+        const legacyIds = ['1', '2'];
+        const foundLegacy = loadedEvents.filter(e => legacyIds.includes(e.id));
+        if (foundLegacy.length > 0) {
+            console.log("Auto-cleaning legacy mock events...", foundLegacy);
+            for (const legacyEvent of foundLegacy) {
+                await LocalDB.deleteEvent(legacyEvent.id);
+            }
+            // Reload after cleanup
+            loadedEvents = await LocalDB.getAllEvents();
+        }
         
         const hasLocalData = loadedEvents.length > 0 || loadedSettings !== undefined;
 
