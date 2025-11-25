@@ -12,41 +12,7 @@ import { LocalDB } from './services/localDb';
 import { PublishService } from './services/publishService';
 
 // Mock Initial Data (Used only for seeding if no data exists anywhere)
-const SEED_EVENTS: Event[] = [
-  {
-    id: '1',
-    title: 'Tech Horizon Summit 2024',
-    description: 'An immersive dive into the future of AI and robotics. Join industry leaders for a weekend of innovation.',
-    date: '2024-11-15T09:00',
-    location: 'Moscone Center, SF',
-    capacity: 500,
-    bookings: 342,
-    price: 299,
-    imageUrl: 'https://picsum.photos/800/400?random=1',
-    status: 'published',
-    tags: ['Technology', 'AI', 'Networking'],
-    agenda: [
-      { time: '09:00', title: 'Registration & Breakfast', description: 'Check-in and networking.' },
-      { time: '10:00', title: 'Keynote: The Age of Agents', description: 'Opening remarks by CEO.' }
-    ],
-    assets: []
-  },
-  {
-    id: '2',
-    title: 'Midnight Jazz Gala',
-    description: 'A night of smooth jazz, fine dining, and charity fundraising.',
-    date: '2024-12-05T19:00',
-    location: 'The Grand Ballroom',
-    capacity: 200,
-    bookings: 45,
-    price: 150,
-    imageUrl: 'https://picsum.photos/800/400?random=2',
-    status: 'draft',
-    tags: ['Music', 'Gala', 'Charity'],
-    agenda: [],
-    assets: []
-  }
-];
+const SEED_EVENTS: Event[] = [];
 
 const App: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
