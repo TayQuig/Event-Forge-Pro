@@ -234,7 +234,7 @@ app.post('/api/ai/description', checkAuth, async (req, res) => {
 });
 // (Other AI routes omitted for brevity but assumed present based on previous step)
 
-app.get('*', (req, res) => {
+app.get('/:path*', (req, res) => {
   if (fs.existsSync(path.join(DIST_DIR, 'index.html'))) res.sendFile(path.join(DIST_DIR, 'index.html'));
   else res.status(404).send('Frontend build not found. Run npm run build.');
 });
