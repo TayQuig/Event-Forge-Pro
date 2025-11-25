@@ -29,17 +29,13 @@ export const PublishService = {
     },
 
     // Main Publish Function
-    publishEvents: async (events: Event[], settings: AppSettings, globalAssets: Asset[]): Promise<void> => {
+    // Returns the array of events as they were saved on the server (including new Stripe IDs)
+    publishEvents: async (events: Event[], settings: AppSettings, globalAssets: Asset[]): Promise<Event[]> => {
         // 1. Deep copy events to avoid mutating local state during processing
         const eventsToPublish = JSON.parse(JSON.stringify(events)) as Event[];
 
         // 2. Process Images
-        // We need to find any "blob:" URLs or Base64 strings and convert them to server paths
-        // We'll look at 'imageUrl' on events and 'url' on assets
-        
-        // Helper to find the Blob for a given URL
         const findBlobForUrl = async (url: string): Promise<Blob | null> => {
-            // If it's a blob URL, we can likely fetch it directly
             if (url.startsWith('blob:')) {
                 try {
                     const r = await fetch(url);
@@ -49,7 +45,6 @@ export const PublishService = {
                     return null;
                 }
             }
-            // If we had the globalAssets array passed in, we could also look up by ID
             return null;
         };
 
@@ -60,7 +55,6 @@ export const PublishService = {
                 let blob: Blob | null = null;
 
                 if (event.imageUrl.startsWith('data:')) {
-                    // Convert Base64 to Blob
                     const res = await fetch(event.imageUrl);
                     blob = await res.blob();
                 } else {
@@ -69,14 +63,13 @@ export const PublishService = {
 
                 if (blob) {
                     const serverUrl = await PublishService.uploadImage(blob);
-                    event.imageUrl = serverUrl; // Update to server path
+                    event.imageUrl = serverUrl;
                 }
             }
 
             // B. Handle Event Assets
             for (const asset of event.assets) {
                 if (asset.url && (asset.url.startsWith('blob:') || asset.url.startsWith('data:'))) {
-                    console.log(`Uploading asset ${asset.name}...`);
                     const blob = await findBlobForUrl(asset.url);
                     if (blob) {
                         const serverUrl = await PublishService.uploadImage(blob);
@@ -102,5 +95,24 @@ export const PublishService = {
         if (!response.ok) {
             throw new Error('Failed to publish events manifest');
         }
+
+        const result = await response.json();
+        // The server might return the events array with added Stripe IDs
+        if (result.events) {
+            return result.events;
+        }
+        return eventsToPublish;
+    },
+
+    // Helper to start Checkout
+    createCheckoutSession: async (priceId: string, eventId: string): Promise<string> => {
+        const response = await fetch(`${API_URL}/checkout`, {
+             method: 'POST',
+             headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify({ priceId, eventId })
+        });
+        const data = await response.json();
+        if (data.error) throw new Error(data.error);
+        return data.url;
     }
 };

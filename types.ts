@@ -28,6 +28,10 @@ export interface Event {
     tags: string[];
     agenda: AgendaItem[];
     assets: Asset[]; // Local assets specific to this event
+    
+    // Stripe Integration
+    stripeProductId?: string;
+    stripePriceId?: string;
 }
 
 export type PaymentProvider = 'stripe' | 'square' | 'paypal' | 'venmo' | 'crypto' | 'none';

@@ -2,8 +2,9 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Event, AppSettings } from '../types';
-import { Calendar, MapPin, Clock, Ticket, ArrowRight, Share2, CheckCircle, CalendarPlus, X, Facebook, Twitter, Linkedin, Mail, Link as LinkIcon } from 'lucide-react';
+import { Calendar, MapPin, Clock, Ticket, ArrowRight, Share2, CheckCircle, CalendarPlus, X, Facebook, Twitter, Linkedin, Mail, Link as LinkIcon, Loader2 } from 'lucide-react';
 import { generateGoogleCalendarUrl } from '../utils/calendar';
+import { PublishService } from '../services/publishService';
 
 interface PublicViewProps {
     events: Event[];
@@ -75,14 +76,37 @@ export const PublicView: React.FC<PublicViewProps> = ({ events, detailMode = fal
 };
 
 const EventDetailPage: React.FC<{ event: Event, settings: AppSettings }> = ({ event, settings }) => {
-    const [bookingState, setBookingState] = useState<'idle' | 'checkout' | 'processing' | 'success'>('idle');
+    const [bookingState, setBookingState] = useState<'idle' | 'checkout' | 'redirecting' | 'processing' | 'success'>('idle');
     const [showShare, setShowShare] = useState(false);
 
-    const handleCheckout = () => {
+    // Check for success/cancel params in URL from Stripe redirect
+    React.useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('success')) setBookingState('success');
+        // if (params.get('canceled')) setBookingState('idle');
+    }, []);
+
+    const handleStripeCheckout = async () => {
+        if (!event.stripePriceId) {
+            alert("Booking not configured for this event (No Price ID).");
+            return;
+        }
+        setBookingState('redirecting');
+        try {
+            const url = await PublishService.createCheckoutSession(event.stripePriceId, event.id);
+            window.location.href = url;
+        } catch (e) {
+            console.error(e);
+            alert("Failed to start checkout.");
+            setBookingState('idle');
+        }
+    };
+    
+    const handleManualCheckout = () => {
         setBookingState('checkout');
     };
     
-    const confirmPayment = () => {
+    const confirmManualPayment = () => {
         setBookingState('processing');
         setTimeout(() => setBookingState('success'), 2000);
     };
@@ -163,54 +187,21 @@ const EventDetailPage: React.FC<{ event: Event, settings: AppSettings }> = ({ ev
                                 <p className="text-sm">Check your email for the ticket.</p>
                             </div>
                         ) : bookingState === 'checkout' ? (
+                             // Legacy Manual Checkout UI (if needed fallback)
                              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
                                 <div className="flex justify-between items-center pb-2 border-b border-gray-100">
                                     <h3 className="font-bold text-dark">Checkout</h3>
                                     <button onClick={() => setBookingState('idle')}><X className="w-4 h-4 text-gray-400" /></button>
                                 </div>
-                                
-                                {settings.paymentProvider === 'none' && (
-                                    <p className="text-sm text-red-500 bg-red-50 p-2 rounded">No payment provider configured by organizer.</p>
-                                )}
-
-                                {(settings.paymentProvider === 'stripe' || settings.paymentProvider === 'square') && (
-                                    <div className="space-y-3">
-                                        <input className="w-full border border-gray-300 rounded px-3 py-2 text-sm" placeholder="Card Number" />
-                                        <div className="flex gap-2">
-                                            <input className="w-1/2 border border-gray-300 rounded px-3 py-2 text-sm" placeholder="MM/YY" />
-                                            <input className="w-1/2 border border-gray-300 rounded px-3 py-2 text-sm" placeholder="CVC" />
-                                        </div>
-                                        <button onClick={confirmPayment} className="w-full bg-brand text-white py-2 rounded font-bold hover:bg-brand-900 transition">Pay ${event.price}</button>
-                                    </div>
-                                )}
-
-                                {(settings.paymentProvider === 'paypal' || settings.paymentProvider === 'venmo') && (
-                                    <div className="text-center space-y-3">
-                                        <p className="text-sm text-grayText">Pay to: <span className="font-mono bg-gray-100 px-1 rounded">{settings.paymentConfig.email}</span></p>
-                                        <button onClick={confirmPayment} className="w-full bg-[#00457C] text-white py-2 rounded font-bold hover:opacity-90 transition">
-                                            Pay with {settings.paymentProvider === 'paypal' ? 'PayPal' : 'Venmo'}
-                                        </button>
-                                    </div>
-                                )}
-
-                                {settings.paymentProvider === 'crypto' && (
-                                    <div className="text-center space-y-3">
-                                        <p className="text-xs text-grayText">Send {event.price} USD equivalent to:</p>
-                                        <div className="bg-gray-100 p-2 rounded text-xs break-all font-mono text-dark select-all">
-                                            {settings.paymentConfig.walletAddress || '0x000...'}
-                                        </div>
-                                        <button onClick={confirmPayment} className="w-full bg-orange-500 text-white py-2 rounded font-bold hover:bg-orange-600 transition">
-                                            I Have Sent Payment
-                                        </button>
-                                    </div>
-                                )}
+                                <button onClick={confirmManualPayment} className="w-full bg-brand text-white py-2 rounded font-bold hover:bg-brand-900 transition">Confirm (Demo)</button>
                              </div>
                         ) : (
                             <button 
-                                onClick={handleCheckout}
-                                className="w-full bg-brand hover:bg-brand-900 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-brand/30 transition-all active:scale-95 flex items-center justify-center gap-2"
+                                onClick={event.stripePriceId ? handleStripeCheckout : handleManualCheckout}
+                                disabled={bookingState === 'redirecting'}
+                                className="w-full bg-brand hover:bg-brand-900 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-brand/30 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-wait"
                             >
-                                Get Tickets <ArrowRight className="w-5 h-5" />
+                                {bookingState === 'redirecting' ? <Loader2 className="w-5 h-5 animate-spin"/> : <>Get Tickets <ArrowRight className="w-5 h-5" /></>}
                             </button>
                         )}
 

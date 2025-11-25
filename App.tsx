@@ -170,7 +170,19 @@ const App: React.FC = () => {
              setEvents(eventsToPublish);
         }
 
-        await PublishService.publishEvents(eventsToPublish, settings, globalAssets);
+        await PublishService.publishEvents(eventsToPublish, settings, globalAssets).then(async (publishedEvents) => {
+            // If server returned updated events (with Stripe IDs), sync them back to LocalDB
+            if (publishedEvents && publishedEvents.length > 0) {
+                // We need to update local state and IndexedDB with the new IDs
+                // so subsequent publishes update the same Stripe Product instead of creating new ones.
+                console.log("Syncing published events back to local DB...", publishedEvents);
+                
+                for (const remoteEvent of publishedEvents) {
+                    await LocalDB.saveEvent(remoteEvent);
+                }
+                setEvents(publishedEvents);
+            }
+        });
     } catch (e) {
         console.error("Publishing failed:", e);
         throw e;
