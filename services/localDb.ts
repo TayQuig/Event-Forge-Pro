@@ -68,6 +68,10 @@ export const LocalDB = {
     await performTransaction(STORES.EVENTS, 'readwrite', (store) => store.delete(id));
   },
 
+  clearAllEvents: async (): Promise<void> => {
+    await performTransaction(STORES.EVENTS, 'readwrite', (store) => store.clear());
+  },
+
   // --- Assets (Handling Blobs) ---
   getAllAssets: async (): Promise<Asset[]> => {
     return performTransaction(STORES.ASSETS, 'readonly', (store) => store.getAll());

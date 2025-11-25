@@ -1,6 +1,6 @@
 
 import React, { useRef, useState } from 'react';
-import { Save, Palette, Globe, ShieldCheck, CreditCard, Download, Upload, AlertTriangle, FileJson, Code, Copy, Check } from 'lucide-react';
+import { Save, Palette, Globe, ShieldCheck, CreditCard, Download, Upload, AlertTriangle, FileJson, Code, Copy, Check, Trash2 } from 'lucide-react';
 import { AppSettings, PaymentProvider, Event } from '../types';
 import { LocalDB } from '../services/localDb';
 
@@ -69,6 +69,14 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onUpdateSettings, 
             }
         };
         reader.readAsText(file);
+    };
+
+    const handleClearEvents = async () => {
+        if (window.confirm("Are you sure you want to delete ALL events? This action cannot be undone.")) {
+            await LocalDB.clearAllEvents();
+            alert("All events cleared. Please refresh the page.");
+            window.location.reload();
+        }
     };
 
     const getEmbedCode = () => {
@@ -267,6 +275,15 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onUpdateSettings, 
                             onChange={handleRestoreBackup}
                             className="hidden" 
                         />
+                    </div>
+                    
+                    <div className="mt-4 pt-4 border-t border-gray-100">
+                        <button 
+                            onClick={handleClearEvents}
+                            className="w-full flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 py-3 rounded-lg font-medium transition-colors border border-red-100"
+                        >
+                            <Trash2 className="w-4 h-4" /> Delete All Events (Reset)
+                        </button>
                     </div>
                 </section>
 
