@@ -22,6 +22,12 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
+console.log("Environment Check:");
+console.log("- ADMIN_SECRET: Set");
+console.log(`- GEMINI_API_KEY: ${GEMINI_API_KEY ? 'Set' : 'MISSING'}`);
+console.log(`- STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY ? 'Set' : 'MISSING'}`);
+console.log(`- RESEND_API_KEY: ${RESEND_API_KEY ? 'Set' : 'MISSING'}`);
+
 // Initialize GenAI
 const genAI = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
@@ -225,14 +231,51 @@ app.post('/api/checkout', async (req, res) => {
 // AI Routes
 app.post('/api/ai/description', checkAuth, async (req, res) => {
     const { title, vibe, keyDetails } = req.body;
-    if (!genAI.apiKey) return res.status(500).json({error: "AI Key Missing"});
+    if (!GEMINI_API_KEY) return res.status(500).json({error: "AI Key Missing on Server"});
     try {
         const prompt = `Write a compelling description for event "${title}". Vibe: ${vibe}. Details: ${keyDetails}. <200 words.`;
         const response = await genAI.models.generateContent({ model: 'gemini-2.0-flash', contents: prompt });
-        res.json({ text: response.text });
-    } catch (error) { res.status(500).json({ error: "AI Error" }); }
+        res.json({ text: response.text() });
+    } catch (error) { 
+        console.error("GenAI Error:", error);
+        res.status(500).json({ error: "AI Generation Failed" }); 
+    }
 });
-// (Other AI routes omitted for brevity but assumed present based on previous step)
+app.post('/api/ai/agenda', checkAuth, async (req, res) => {
+    const { title, duration } = req.body;
+    if (!GEMINI_API_KEY) return res.status(500).json({error: "AI Key Missing"});
+    try {
+        const prompt = `Generate a ${duration}-hour agenda for "${title}". Return JSON: { "agenda": [{ "time": "09:00", "title": "...", "description": "..." }] }`;
+        const response = await genAI.models.generateContent({ 
+            model: 'gemini-2.0-flash', 
+            contents: prompt,
+            config: { responseMimeType: "application/json" }
+        });
+        const text = response.text();
+        res.json(JSON.parse(text));
+    } catch (error) { 
+        console.error(error);
+        res.status(500).json({ error: "Agenda Gen Failed" }); 
+    }
+});
+
+app.post('/api/ai/tags', checkAuth, async (req, res) => {
+    const { description } = req.body;
+    if (!GEMINI_API_KEY) return res.status(500).json({error: "AI Key Missing"});
+    try {
+        const prompt = `Generate 5 SEO tags for this event description: "${description}". Return JSON: { "tags": ["tag1", "tag2"] }`;
+        const response = await genAI.models.generateContent({ 
+            model: 'gemini-2.0-flash', 
+            contents: prompt,
+            config: { responseMimeType: "application/json" }
+        });
+        const text = response.text();
+        res.json(JSON.parse(text));
+    } catch (error) { 
+        console.error(error);
+        res.status(500).json({ error: "Tag Gen Failed" }); 
+    }
+});
 
 app.get(/.*/, (req, res) => {
   if (fs.existsSync(path.join(DIST_DIR, 'index.html'))) res.sendFile(path.join(DIST_DIR, 'index.html'));
