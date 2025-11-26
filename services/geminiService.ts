@@ -3,7 +3,7 @@ import { AgendaItem } from '../types';
 // Determine API URL (Same as PublishService)
 const isDev = import.meta.env.DEV;
 const API_URL = isDev ? 'http://localhost:3001/api/ai' : '/api/ai';
-const ADMIN_SECRET = 'secret'; // Needs to match server. In production, handle via secure session/cookie if possible, but Bearer is fine for this scope.
+const ADMIN_SECRET = '!DD11301987!'; // Needs to match server. In production, handle via secure session/cookie if possible, but Bearer is fine for this scope.
 
 const apiCall = async (endpoint: string, body: any) => {
     const response = await fetch(`${API_URL}/${endpoint}`, {
