@@ -6,10 +6,17 @@ import { File, Image, Music, Film, MoreVertical, Folder, UploadCloud } from 'luc
 interface AssetManagerProps {
     assets: Asset[];
     onAddAsset: (asset: Asset, fileBlob?: Blob) => void;
+    onDeleteAsset: (id: string) => void;
 }
 
-export const AssetManager: React.FC<AssetManagerProps> = ({ assets, onAddAsset }) => {
+export const AssetManager: React.FC<AssetManagerProps> = ({ assets, onAddAsset, onDeleteAsset }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [selectedType, setSelectedType] = React.useState<'all' | 'image' | 'audio' | 'video' | 'document'>('all');
+    const [showDeleteFor, setShowDeleteFor] = React.useState<string | null>(null);
+
+    const filteredAssets = selectedType === 'all' 
+        ? assets 
+        : assets.filter(a => a.type === selectedType);
 
     const getIcon = (type: Asset['type']) => {
         switch(type) {
@@ -48,17 +55,29 @@ export const AssetManager: React.FC<AssetManagerProps> = ({ assets, onAddAsset }
             <div className="w-64 border-r border-accent/20 bg-white p-4 hidden md:block shadow-sm">
                 <h3 className="text-xs font-semibold text-grayText uppercase tracking-wider mb-4">Directories</h3>
                 <ul className="space-y-1 text-sm">
-                    <li className="flex items-center gap-2 px-3 py-2 bg-brand/5 text-brand rounded cursor-pointer border border-brand/20 font-medium">
-                        <Folder className="w-4 h-4 fill-current" /> Local Storage
+                    <li 
+                        onClick={() => setSelectedType('all')}
+                        className={`flex items-center gap-2 px-3 py-2 rounded cursor-pointer border font-medium transition ${selectedType === 'all' ? 'bg-brand/5 text-brand border-brand/20' : 'border-transparent text-grayText hover:bg-gray-100'}`}
+                    >
+                        <Folder className="w-4 h-4 fill-current" /> All Files
                     </li>
-                    <li className="flex items-center gap-2 px-3 py-2 text-grayText hover:bg-gray-100 rounded cursor-pointer transition ml-4">
-                        <span className="w-1 h-1 bg-gray-400 rounded-full"></span> Images
+                    <li 
+                        onClick={() => setSelectedType('image')}
+                        className={`flex items-center gap-2 px-3 py-2 rounded cursor-pointer transition ml-4 ${selectedType === 'image' ? 'bg-gray-100 text-dark font-medium' : 'text-grayText hover:bg-gray-100'}`}
+                    >
+                        <span className={`w-2 h-2 rounded-full ${selectedType === 'image' ? 'bg-brand' : 'bg-gray-300'}`}></span> Images
                     </li>
-                    <li className="flex items-center gap-2 px-3 py-2 text-grayText hover:bg-gray-100 rounded cursor-pointer transition ml-4">
-                        <span className="w-1 h-1 bg-gray-400 rounded-full"></span> Documents
+                    <li 
+                        onClick={() => setSelectedType('document')}
+                        className={`flex items-center gap-2 px-3 py-2 rounded cursor-pointer transition ml-4 ${selectedType === 'document' ? 'bg-gray-100 text-dark font-medium' : 'text-grayText hover:bg-gray-100'}`}
+                    >
+                        <span className={`w-2 h-2 rounded-full ${selectedType === 'document' ? 'bg-brand' : 'bg-gray-300'}`}></span> Documents
                     </li>
-                    <li className="flex items-center gap-2 px-3 py-2 text-grayText hover:bg-gray-100 rounded cursor-pointer transition ml-4">
-                        <span className="w-1 h-1 bg-gray-400 rounded-full"></span> Audio
+                    <li 
+                        onClick={() => setSelectedType('audio')}
+                        className={`flex items-center gap-2 px-3 py-2 rounded cursor-pointer transition ml-4 ${selectedType === 'audio' ? 'bg-gray-100 text-dark font-medium' : 'text-grayText hover:bg-gray-100'}`}
+                    >
+                        <span className={`w-2 h-2 rounded-full ${selectedType === 'audio' ? 'bg-brand' : 'bg-gray-300'}`}></span> Audio
                     </li>
                 </ul>
                 
@@ -84,7 +103,7 @@ export const AssetManager: React.FC<AssetManagerProps> = ({ assets, onAddAsset }
                 <header className="mb-6 flex justify-between items-center border-b border-accent/20 pb-4">
                     <div>
                         <h2 className="text-2xl font-bold text-brand">Asset Library</h2>
-                        <p className="text-grayText text-sm">Files stored locally on your machine ({assets.length})</p>
+                        <p className="text-grayText text-sm">Files stored locally on your machine ({filteredAssets.length})</p>
                     </div>
                     <button onClick={() => fileInputRef.current?.click()} className="md:hidden bg-brand text-white p-2 rounded-lg">
                         <UploadCloud className="w-5 h-5" />
@@ -92,8 +111,13 @@ export const AssetManager: React.FC<AssetManagerProps> = ({ assets, onAddAsset }
                 </header>
                 
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                    {assets.map((asset) => (
-                        <div key={asset.id} className="group relative bg-white rounded-lg border border-accent/20 hover:border-brand/50 hover:shadow-md transition-all p-4 flex flex-col items-center justify-center gap-3 aspect-square cursor-pointer">
+                    {filteredAssets.map((asset) => (
+                        <div 
+                            key={asset.id} 
+                            className="group relative bg-white rounded-lg border border-accent/20 hover:border-brand/50 hover:shadow-md transition-all p-4 flex flex-col items-center justify-center gap-3 aspect-square cursor-pointer"
+                            onMouseEnter={() => setShowDeleteFor(asset.id)}
+                            onMouseLeave={() => setShowDeleteFor(null)}
+                        >
                              {/* Preview Thumbnail Logic */}
                             {asset.type === 'image' ? (
                                 <div className="w-full h-24 bg-gray-50 rounded overflow-hidden border border-gray-100">
@@ -110,8 +134,20 @@ export const AssetManager: React.FC<AssetManagerProps> = ({ assets, onAddAsset }
                                 <p className="text-[10px] text-grayText mt-1">{asset.size || 'Local File'}</p>
                             </div>
                             
-                            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button className="p-1 hover:bg-gray-100 rounded"><MoreVertical className="w-4 h-4 text-gray-500" /></button>
+                            {/* Action Menu / Delete Button */}
+                            <div className={`absolute top-2 right-2 transition-opacity ${showDeleteFor === asset.id ? 'opacity-100' : 'opacity-0'}`}>
+                                <div className="relative">
+                                    <button 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            if(window.confirm('Delete this file?')) onDeleteAsset(asset.id);
+                                        }} 
+                                        className="p-1.5 bg-white hover:bg-red-50 text-gray-400 hover:text-red-500 rounded shadow-sm border border-gray-200"
+                                        title="Delete Asset"
+                                    >
+                                        <MoreVertical className="w-4 h-4" />
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     ))}

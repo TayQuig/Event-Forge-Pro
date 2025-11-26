@@ -124,6 +124,12 @@ const App: React.FC = () => {
     setGlobalAssets(prev => [displayAsset, ...prev]);
   };
 
+  const handleDeleteAsset = async (id: string) => {
+    if (isVisitorMode) return;
+    await LocalDB.deleteAsset(id);
+    setGlobalAssets(prev => prev.filter(a => a.id !== id));
+  };
+
   const handleUpdateSettings = async (newSettings: AppSettings) => {
       if (isVisitorMode) return;
       await LocalDB.saveSettings(newSettings);
@@ -213,6 +219,7 @@ const App: React.FC = () => {
                   <AssetManager 
                     assets={globalAssets} 
                     onAddAsset={handleAddAsset} 
+                    onDeleteAsset={handleDeleteAsset}
                   />
                 } />
                 <Route path="/settings" element={
