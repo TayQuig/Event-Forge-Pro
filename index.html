@@ -11,34 +11,50 @@
         theme: {
           extend: {
             colors: {
-              cream: 'var(--cream-background)',
+              cream: '#FFFBF5',
               brand: {
-                 DEFAULT: 'var(--primary-blue)',
+                 DEFAULT: '#0205B7',
                  50: '#eef0ff',
                  100: '#e0e2ff',
-                 500: 'var(--primary-blue)',
-                 600: '#00038f', // Darker shade of primary blue
+                 500: '#0205B7',
+                 600: '#00038f',
                  900: '#000155',
               },
               accent: {
-                  DEFAULT: 'var(--purple)',
-                  light: 'rgba(165, 147, 224, 0.2)',
+                  DEFAULT: '#A593E0', // Purple
+                  peach: '#FFC6A5',
+                  cyan: '#63D5F9',
+                  gold: '#C4A962',
               },
-              dark: 'var(--text-dark)',
-              grayText: 'var(--text-gray)',
+              dark: '#333333',
+              grayText: '#5E5E5E',
             },
             fontFamily: {
-                sans: ['Inter', 'sans-serif'],
+                sans: ['Figtree', 'sans-serif'],
+            },
+            borderRadius: {
+                'xl': '20px',
+                '2xl': '20px', // Aligning standard xl/2xl to brand 20px
+                'pill': '100px',
+            },
+            boxShadow: {
+                'card': '0px 42px 32.5px -13px rgba(2, 5, 183, 0.25)',
+                'container': '0 0 40px rgba(0, 0, 0, 0.1)',
+                'hover': '0 20px 40px rgba(2, 5, 183, 0.2)',
+                'soft': '0 10px 30px rgba(165, 147, 224, 0.2)',
+                'bevel': '9px 10px 0px 0px #0205b7',
             }
           }
         }
       }
     </script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
       :root {
-        --primary-blue: #0205b7;
-        --cream-background: #fffbf5;
+        --primary-blue: #0205B7;
+        --cream-background: #FFFBF5;
         --purple: rgba(165, 147, 224, 1);
         --text-dark: #333333;
         --text-gray: #5e5e5e;

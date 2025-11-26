@@ -126,6 +126,15 @@ export const Settings: React.FC<SettingsProps> = ({ settings, onUpdateSettings, 
                                 </div>
                             </div>
                         </div>
+                        <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                            <h4 className="text-sm font-bold text-dark mb-2">Preset Brand Colors (Reiki Goddess)</h4>
+                            <div className="flex gap-3">
+                                <button onClick={() => handleChange('brandColor', '#0205B7')} className="w-8 h-8 rounded-full bg-[#0205B7] border-2 border-white ring-1 ring-gray-200" title="Brand Blue"></button>
+                                <button onClick={() => handleChange('brandColor', '#A593E0')} className="w-8 h-8 rounded-full bg-[#A593E0] border-2 border-white ring-1 ring-gray-200" title="Purple"></button>
+                                <button onClick={() => handleChange('brandColor', '#FFC6A5')} className="w-8 h-8 rounded-full bg-[#FFC6A5] border-2 border-white ring-1 ring-gray-200" title="Peach"></button>
+                                <button onClick={() => handleChange('brandColor', '#63D5F9')} className="w-8 h-8 rounded-full bg-[#63D5F9] border-2 border-white ring-1 ring-gray-200" title="Cyan"></button>
+                            </div>
+                        </div>
                     </div>
                 </section>
 
