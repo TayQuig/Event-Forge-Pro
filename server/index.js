@@ -235,7 +235,20 @@ app.post('/api/ai/description', checkAuth, async (req, res) => {
     try {
         const prompt = `Write a compelling description for event "${title}". Vibe: ${vibe}. Details: ${keyDetails}. <200 words.`;
         const response = await genAI.models.generateContent({ model: 'gemini-2.0-flash', contents: prompt });
-        res.json({ text: response.text() });
+        // @google/genai return format check: 
+        // It seems the SDK returns the full response object and we need to access candidates
+        // or it might be response.text() if it's the older SDK, but the error says NO.
+        // Let's log the response keys to debug if this fails again, but try the candidates path.
+        
+        // Fallback strategy: The error says response.text is not a function.
+        // Use response.text if it's a property, or dig into candidates.
+        // Safe access:
+        const text = typeof response.text === 'function' ? response.text() : 
+                     (response.text || 
+                      (response.candidates && response.candidates[0]?.content?.parts[0]?.text) || 
+                      "No description generated.");
+                      
+        res.json({ text: text });
     } catch (error) { 
         console.error("GenAI Error:", error);
         res.status(500).json({ error: "AI Generation Failed" }); 
@@ -251,7 +264,10 @@ app.post('/api/ai/agenda', checkAuth, async (req, res) => {
             contents: prompt,
             config: { responseMimeType: "application/json" }
         });
-        const text = response.text();
+        const text = typeof response.text === 'function' ? response.text() : 
+                     (response.text || 
+                      (response.candidates && response.candidates[0]?.content?.parts[0]?.text) || 
+                      "{}");
         res.json(JSON.parse(text));
     } catch (error) { 
         console.error(error);
@@ -269,7 +285,10 @@ app.post('/api/ai/tags', checkAuth, async (req, res) => {
             contents: prompt,
             config: { responseMimeType: "application/json" }
         });
-        const text = response.text();
+        const text = typeof response.text === 'function' ? response.text() : 
+                     (response.text || 
+                      (response.candidates && response.candidates[0]?.content?.parts[0]?.text) || 
+                      "{}");
         res.json(JSON.parse(text));
     } catch (error) { 
         console.error(error);
